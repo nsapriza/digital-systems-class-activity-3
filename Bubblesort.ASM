@@ -92,8 +92,8 @@ gpr0		EQU 0x2A
 
 main
 
-	call	Load_TestVector0
-;	call	Load_TestVector1
+;	call	Load_TestVector0
+	call	Load_TestVector1
 ;	call	Load_TestVector2
 
 	call	Bubblesort
@@ -125,18 +125,19 @@ Whileloop
 	btfss Flag, 0	;bit test flag at bit 0, skip if set
 	return			;flag is false -> list is sorted -> return
 	
-	;set counter to array length - 1
+	;set counter to array length - 2
 	movf  Length_reg, w ;Length -> W
 	movwf Counter		;W -> Counter
-	decf Counter,f		;set Counter to Counter -1	
+	decf Counter,f		;set Counter to Counter -1
+	decf Counter,f		;set Counter to Counter -2	
 
 	;set i to 1
 	clrf i				;clear i
 	incf i,f				;set i to i + 1
 
 Forloop	
-	call i_is_at_Length_reg ;check if i is at array Length -1
-
+	goto i_is_at_Length_reg ;check if i is at array Length -1
+i_is_at_less_Length_reg
 	;set Current to array value at position array start + i 
 	movf Address_reg,w	;Address_reg -> W
 	addwf i,w   		;add i to W
@@ -171,7 +172,7 @@ Forloop
 
 	
 Decrement_counter
-	incf i,f				;set i to i + 1
+	incf i,f			;set i to i + 1
 	decfsz Counter,f	;decrement Counter 
 	goto Forloop		;if Counter is 0 go to Forloop
 	goto fail			;else go to faill
@@ -190,22 +191,23 @@ i_is_at_Length_reg
 	movf i,w		
 	subwf gpr0,f	
 	
+	;test if gpr0 is clear
 	btfsc gpr0,0																;(needs work) (can change to add1 decfsz)
-	return			
+	goto i_is_at_less_Length_reg			
 	btfsc gpr0,1	
-	return			
+	goto i_is_at_less_Length_reg			
 	btfsc gpr0,2	
-	return			
+	goto i_is_at_less_Length_reg			
 	btfsc gpr0,3	
-	return			
+	goto i_is_at_less_Length_reg			
 	btfsc gpr0,4
-	return
+	goto i_is_at_less_Length_reg
 	btfsc gpr0,5
-	return
+	goto i_is_at_less_Length_reg
 	btfsc gpr0,6
-	return
+	goto i_is_at_less_Length_reg
 	btfsc gpr0,7
-	return
+	goto i_is_at_less_Length_reg
 	goto Whileloop
 ; Bubblesort subroutine - end
 
