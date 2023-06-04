@@ -121,29 +121,21 @@ Bubblesort
 	bcf Flag, 0 	;clear flag
 	bsf Flag, 0 	;set flag to true
 Whileloop
-	btfss Flag, 0	;test flag, skip if set
+	;subroutine termination check
+	btfss Flag, 0	;bit test flag at bit 0, skip if set
 	return			;flag is false -> list is sorted -> return
 	
-	;set counter to array length
+	;set counter to array length - 1
 	movf  Length_reg, w ;Length -> W
-	movwf Counter		;W -> counter
-
-	;set counter to array length -1 
-	;clrw				;clear W
-	;addlw d'1'			;add 1 to W
-	;subwf Counter, f	;subtract W from counter
+	movwf Counter		;W -> Counter
 	decf Counter,f		;set Counter to Counter -1	
 
-	;set i to 0
+	;set i to 1
 	clrf i				;clear i
+	incf i,f				;set i to i + 1
 
 Forloop	
-	call i_is_at_Length_reg
-	
-	;set i to i + 1																				(needs work)
-	movf i,w			;i -> W
-	addlw d'1'			;add 1 to W
-	movwf i				;w -> i
+	call i_is_at_Length_reg ;check if i is at array Length -1
 
 	;set Current to array value at position array start + i 
 	movf Address_reg,w	;Address_reg -> W
@@ -173,8 +165,13 @@ Forloop
 	movwf Swap_b		;W -> Swap_b
 	decf Swap_b,f		;decriment Swap_b	
 	call Swap_a_and_b	;call subroutine SwapAB
+	incf i,f			;set i to i + 1
+	goto Forloop
 
+
+	
 Decrement_counter
+	incf i,f				;set i to i + 1
 	decfsz Counter,f	;decrement Counter 
 	goto Forloop		;if Counter is 0 go to Forloop
 	goto fail			;else go to faill
