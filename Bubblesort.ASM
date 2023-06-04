@@ -188,7 +188,7 @@ i_is_at_Length_reg
 	
 	;subtract i from gpr0
 	movf i,w		
-	subwf gpr0,w	
+	subwf gpr0,f	
 	
 	btfsc gpr0,0																;(needs work) (can change to add1 decfsz)
 	return			
