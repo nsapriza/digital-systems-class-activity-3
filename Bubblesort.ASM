@@ -102,18 +102,6 @@ main
 loop
 	goto	loop
 
-;************************
-;     reference table   *
-;************************
-;Address_reg	EQU	0x20
-;Length_reg 	EQU	0x21
-;Counter		EQU 0x22	
-;i			    EQU 0x22
-;f				EQU d'1'
-;w				EQU d'0'
-;Flag			EQU 0x24
-;Current		EQU 0x25
-
 
 ; Bubblesort subroutine - begin
 Bubblesort
@@ -125,11 +113,10 @@ Whileloop
 	btfss Flag, 0	;bit test flag at bit 0, skip if set
 	return			;flag is false -> list is sorted -> return
 	
-	;set counter to array length - 2
+	;set counter to array length - 1
 	movf  Length_reg, w ;Length -> W
 	movwf Counter		;W -> Counter
 	decf Counter,f		;set Counter to Counter -1
-	decf Counter,f		;set Counter to Counter -2	
 
 	;set i to 1
 	clrf i				;clear i
@@ -182,10 +169,10 @@ fail
 	goto Whileloop		;go to Whileloop to terminate subroutine
 
 i_is_at_Length_reg
-	;set gpr to Length_reg - 1
+	;set gpr to Length_reg
 	movf Length_reg,w	
 	movwf gpr0		
-	decf gpr0,f
+	;decf gpr0,f
 	
 	;subtract i from gpr0
 	movf i,w		
