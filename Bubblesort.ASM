@@ -12,8 +12,8 @@
 ;**********************************************************************
 ;                                                                     *
 ;    Filename:	    Bubblesort.asm                                    *
-;    Date:                                                            *
-;    File Version:                                                    *
+;    Date:          03/06/2023                                                  *
+;    File Version:  1                                                  *
 ;                                                                     *
 ;    Author:        Grupo xx				                          *
 ;    Company:       Sistemas Digitales II				              *
@@ -50,7 +50,18 @@ pclath_temp	EQU	0x7F		; variable used for context saving
 ;***** Bubblesort subroutine variables
 ; void Bubblesort (char Address_reg, char Length_reg); C code example
 Address_reg	EQU	0x20	;Bank0: 0x00 - 0x7F (128 registros), GPR: 0x20 - 0x7F, SFR: 0x00 - 0x1F (32 registros)
-Length_reg	EQU	0x21	
+Length_reg	EQU	0x21
+Counter		EQU 0x22	
+i			EQU 0x23
+f			EQU d'1'
+w			EQU d'0'
+Flag		EQU 0x24	;1 = true and 0 = false
+Current		EQU 0x25
+Swap_a		EQU 0x26
+Swap_b		EQU 0x27
+Swap_reg_a	EQU 0x28
+Swap_reg_b	EQU 0x29
+gpr0		EQU 0x2A
 
 ;**********************************************************************
 	ORG     0x000           ; processor reset vector
@@ -84,23 +95,140 @@ main
 	call	Load_TestVector0
 ;	call	Load_TestVector1
 ;	call	Load_TestVector2
-	
+
 	call	Bubblesort
 
 
 loop
 	goto	loop
 
+;************************
+;     reference table   *
+;************************
+;Address_reg	EQU	0x20
+;Length_reg 	EQU	0x21
+;Counter		EQU 0x22	
+;i			    EQU 0x22
+;f				EQU d'1'
+;w				EQU d'0'
+;Flag			EQU 0x24
+;Current		EQU 0x25
 
 
 ; Bubblesort subroutine - begin
 Bubblesort
-	; Bubblesort subroutine developed code goes here. 
-	;
-	;
-	return
-; Bubblesort subroutine - begin
+	;set "not done" flag to true
+	bcf Flag, 0 	;clear flag
+	bsf Flag, 0 	;set flag to true
+Whileloop
+	btfss Flag, 0	;test flag, skip if set
+	return			;flag is false -> list is sorted -> return
+	
+	;set counter to array length
+	movf  Length_reg, w ;Length -> W
+	movwf Counter		;W -> counter
 
+	;set counter to array length -1 
+	;clrw				;clear W
+	;addlw d'1'			;add 1 to W
+	;subwf Counter, f	;subtract W from counter
+	decf Counter,f		;set Counter to Counter -1	
+
+	;set i to 0
+	clrf i				;clear i
+
+Forloop	
+	call i_is_at_Length_reg
+	
+	;set i to i + 1																				(needs work)
+	movf i,w			;i -> W
+	addlw d'1'			;add 1 to W
+	movwf i				;w -> i
+
+	;set Current to array value at position array start + i 
+	movf Address_reg,w	;Address_reg -> W
+	addwf i,w   		;add i to W
+	movwf FSR			;W -> FSR
+	movf INDF,w			;(first vector + i) value -> W
+	movwf Current 		;W -> Current
+
+	;set W to array value at position array start + i -1
+	movf Address_reg,w	;Address_reg -> W
+	addwf i,w   		;add i to w
+	movwf FSR			;W -> FSR
+	decf FSR,f			;subtract 1 from FSR
+	movf INDF,w			;(first vector - 1) value -> W
+	
+	;test if Current > W
+	subwf Current, f	;subtract w from Current
+	btfss Current, 7	;test MSB, skip if Current is +
+	goto Decrement_counter
+	
+	;swap Current and W																			(needs work)
+	movf Address_reg,w	;Address_reg -> W
+	addwf i,w   		;add i to W
+	movwf Swap_a		;W -> Swap_a	
+	movf Address_reg,w	;Address_reg -> W
+	addwf i,w   		;add i to w	
+	movwf Swap_b		;W -> Swap_b
+	decf Swap_b,f		;decriment Swap_b	
+	call Swap_a_and_b	;call subroutine SwapAB
+
+Decrement_counter
+	decfsz Counter,f	;decrement Counter 
+	goto Forloop		;if Counter is 0 go to Forloop
+	goto fail			;else go to faill
+
+fail
+	bcf Flag,0			;set "not done" flag to false
+	goto Whileloop		;go to Whileloop to terminate subroutine
+
+i_is_at_Length_reg
+	;set gpr to Length_reg - 1
+	movf Length_reg,w	
+	movwf gpr0		
+	decf gpr0,f
+	
+	;subtract i from gpr0
+	movf i,w		
+	subwf gpr0,w	
+	
+	btfsc gpr0,0																;(needs work) (can change to add1 decfsz)
+	return			
+	btfsc gpr0,1	
+	return			
+	btfsc gpr0,2	
+	return			
+	btfsc gpr0,3	
+	return			
+	btfsc gpr0,4
+	return
+	btfsc gpr0,5
+	return
+	btfsc gpr0,6
+	return
+	btfsc gpr0,7
+	return
+	goto Whileloop
+; Bubblesort subroutine - end
+
+;swap subroutine - start
+Swap_a_and_b
+	movf Swap_a,w		; Swap_a -> W
+	movwf FSR			; W -> FSR
+	movf INDF,w			; Swap_a value -> W
+	movwf Swap_reg_a	; W -> Swap_reg
+	movf Swap_b,w
+	movwf FSR
+	movf INDF,w
+	movwf Swap_reg_b
+	movf Swap_reg_a,w
+	movwf INDF
+	movf Swap_a,w		; Swap_a -> W
+	movwf FSR			; W -> FSR
+	movf Swap_reg_b,w
+	movwf INDF
+	return
 
 
 ; Load TestVector0 - begin
