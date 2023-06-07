@@ -1,0 +1,53 @@
+MPLINK 4.38, Linker
+Linker Map File - Created Tue Jun 06 20:58:39 2023
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x000000    program   0x000004
+                   .cinit    romdata   0x000002    program   0x000004
+                   .org_1       code   0x000004    program   0x0000f2
+.config_2007_STATISTICS.O       code   0x002007    program   0x000002
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x00007c      
+                            0x002007    0x002007      
+            126 out of 8454 program addresses used, program memory utilization is 1%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                      AVG   0x00003b    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+               Inner_loop   0x00001e    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+         Load_TestVector0   0x00003c    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+         Load_TestVector1   0x000051    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+         Load_TestVector2   0x000076    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+                  Min_max   0x00002b    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+                Min_max_0   0x000034    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+               Statistics   0x000013    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+                     loop   0x000012    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+                     main   0x000010    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                     main   0x000010    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+                     loop   0x000012    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+               Statistics   0x000013    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+               Inner_loop   0x00001e    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+                  Min_max   0x00002b    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+                Min_max_0   0x000034    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+                      AVG   0x00003b    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+         Load_TestVector0   0x00003c    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+         Load_TestVector1   0x000051    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+         Load_TestVector2   0x000076    program     static C:\Users\nsapr\OneDrive - Universidad de Montevideo\Semestre 3\SD\entregable3_mi_version\statistics\Statistics.ASM
+
+

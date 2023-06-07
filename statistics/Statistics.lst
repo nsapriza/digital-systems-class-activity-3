@@ -1,0 +1,712 @@
+MPASM  5.40                    STATISTICS.ASM   6-6-2023  20:58:38         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 ;**********************************************************************
+                      00002 ;   This file is a basic code template for assembly code generation   *
+                      00003 ;   on the PIC16F877A. This file contains the basic code              *
+                      00004 ;   building blocks to build upon.                                    *  
+                      00005 ;                                                                     *
+                      00006 ;   Refer to the MPASM User's Guide for additional information on     *
+                      00007 ;   features of the assembler (Document DS33014).                     *
+                      00008 ;                                                                     *
+                      00009 ;   Refer to the respective PIC data sheet for additional             *
+                      00010 ;   information on the instruction set.                               *
+                      00011 ;                                                                     *
+                      00012 ;**********************************************************************
+                      00013 ;                                                                     *
+                      00014 ;    Filename:      Statistics.asm                                    *
+                      00015 ;    Date:                                                            *
+                      00016 ;    File Version:                                                    *
+                      00017 ;                                                                     *
+                      00018 ;    Author:        Grupo xx                                                      *
+                      00019 ;    Company:       Sistemas Digitales II                                             *
+                      00020 ;                                                                     * 
+                      00021 ;                                                                     *
+                      00022 ;**********************************************************************
+                      00023 ;                                                                     *
+                      00024 ;    Files Required: P16F877A.INC                                     *
+                      00025 ;                                                                     *
+                      00026 ;**********************************************************************
+                      00027 ;                                                                     *
+                      00028 ;    Notes:                                                           *
+                      00029 ;                                                                     *
+                      00030 ;**********************************************************************
+                      00031 
+                      00032 
+                      00033         list            p=16f877A       ; list directive to define processor
+                      00034         #include        <p16f877A.inc>  ; processor specific variable definitions
+                      00001         LIST
+                      00002 
+                      00003 ;==========================================================================
+                      00004 ;  MPASM PIC16F877A processor include
+                      00005 ; 
+                      00006 ;  (c) Copyright 1999-2011 Microchip Technology, All rights reserved
+                      00007 ;==========================================================================
+                      00008 
+                      00555         LIST
+                      00035         
+2007   3F3A           00036         __CONFIG _CP_OFF & _WDT_OFF & _BODEN_OFF & _PWRTE_OFF & _HS_OSC & _WRT_OFF & _LVP_OFF & _CPD_OFF
+                      00037 
+                      00038 ; '__CONFIG' directive is used to embed configuration data within .asm file.
+                      00039 ; The lables following the directive are located in the respective .inc file.
+                      00040 ; See respective data sheet for additional information on configuration word.
+                      00041 
+                      00042 
+                      00043 
+                      00044 ;***** VARIABLE DEFINITIONS
+MPASM  5.40                    STATISTICS.ASM   6-6-2023  20:58:38         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+  0000007D            00045 w_temp          EQU     0x7D            ; variable used for context saving 
+  0000007E            00046 status_temp     EQU     0x7E            ; variable used for context saving
+  0000007F            00047 pclath_temp     EQU     0x7F            ; variable used for context saving                      
+                      00048 
+                      00049 
+                      00050 ;***** Statistics subroutine variables
+                      00051 ; Statst_struct Statistics(char Address_reg, char Length_reg); C code example, Stats_struct is an struct
+                             composed of Min_reg, Max_reg and Avg_reg.
+  00000020            00052 Address_reg     EQU     0x20    ;Bank0: 0x00 - 0x7F (128 registros), GPR: 0x20 - 0x7F, SFR: 0x00 - 0x1F 
+                            (32 registros)
+  00000021            00053 Length_reg      EQU     0x21    
+  00000022            00054 Min_reg         EQU 0x22
+  00000023            00055 Max_reg         EQU 0x23
+  00000024            00056 Avg_reg         EQU 0x24
+  00000025            00057 Current         EQU 0x25
+  00000026            00058 Gpr_0           EQU 0x26
+  00000000            00059 w                       EQU d'0'
+  00000001            00060 f                       EQU d'1'
+                      00061 ;**********************************************************************
+                      00062         ORG     0x000           ; processor reset vector
+                      00063 
+0000   0000           00064         nop                                             ; nop required for icd
+0001   2???           00065         goto    main            ; go to beginning of program
+                      00066 
+                      00067 
+                      00068         ORG     0x004           ; interrupt vector location
+                      00069 
+0004   00FD           00070         movwf   w_temp          ; save off current W register contents
+0005   0803           00071         movf    STATUS,w        ; move status register into W register
+0006   00FE           00072         movwf   status_temp     ; save off contents of STATUS register
+0007   080A           00073         movf    PCLATH,w                ; move pclath register into w register
+0008   00FF           00074         movwf   pclath_temp             ; save off contents of PCLATH register
+                      00075 
+                      00076 ; isr code can go here or be located as a call subroutine elsewhere
+                      00077 
+0009   087F           00078         movf    pclath_temp,w   ; retrieve copy of PCLATH register
+000A   008A           00079         movwf   PCLATH                  ; restore pre-isr PCLATH register contents
+000B   087E           00080         movf    status_temp,w   ; retrieve copy of STATUS register
+000C   0083           00081         movwf   STATUS          ; restore pre-isr STATUS register contents
+000D   0EFD           00082         swapf   w_temp,f
+000E   0E7D           00083         swapf   w_temp,w        ; restore pre-isr W register contents
+000F   0009           00084         retfie                  ; return from interrupt
+                      00085 
+                      00086 
+                      00087 
+0010                  00088 main
+                      00089 
+                      00090 ;       call    Load_TestVector0
+0010   2???           00091         call    Load_TestVector1
+                      00092 ;       call    Load_TestVector2
+                      00093         
+0011   2???           00094         call    Statistics
+                      00095 
+MPASM  5.40                    STATISTICS.ASM   6-6-2023  20:58:38         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00096 
+0012                  00097 loop
+0012   2???           00098         goto    loop
+                      00099 
+                      00100 
+                      00101 
+                      00102 ; Statistics subroutine - begin
+0013                  00103 Statistics
+0013   0820           00104         movf Address_reg,w
+0014   00A5           00105         movwf Current
+                      00106         
+0015   0825           00107         movf Current,w
+0016   0084           00108         movwf FSR
+0017   0800           00109         movf INDF,w
+0018   00A2           00110         movwf Min_reg
+0019   00A3           00111         movwf Max_reg
+001A   00A4           00112         movwf Avg_reg
+                      00113         
+001B   0B21           00114         decfsz Length_reg,w
+001C   2???           00115         goto Inner_loop
+001D   0008           00116         return
+                      00117 
+001E                  00118 Inner_loop      
+001E   0AA5           00119         incf Current,f
+001F   2???           00120         call Min_max
+                      00121         
+0020   0825           00122         movf Current,w
+0021   0084           00123         movwf FSR
+0022   0800           00124         movf INDF,w
+0023   07A4           00125         addwf Avg_reg,f
+                      00126 
+0024   0820           00127         movf Address_reg,w
+0025   0721           00128         addwf Length_reg,w
+0026   0225           00129         subwf Current,w
+0027   1C03           00130         btfss STATUS,C
+0028   2???           00131         goto Inner_loop
+0029   2???           00132         call AVG        
+002A   0008           00133         return
+                      00134 ; Statistics subroutine - end
+                      00135 
+                      00136 ; Min_max subroutine - begin
+002B                  00137 Min_max 
+002B   0825           00138         movf Current,w
+002C   0084           00139         movwf FSR
+002D   0800           00140         movf INDF,w
+002E   0223           00141         subwf Max_reg,w
+                      00142         
+002F   1803           00143         btfsc STATUS,C
+0030   2???           00144         goto Min_max_0
+                      00145         
+0031   0800           00146         movf INDF,w
+0032   00A3           00147         movwf Max_reg
+0033   0008           00148         return
+MPASM  5.40                    STATISTICS.ASM   6-6-2023  20:58:38         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00149 
+0034                  00150 Min_max_0
+0034   0800           00151         movf INDF,w
+0035   0222           00152         subwf Min_reg,w
+                      00153 
+0036   1C03           00154         btfss STATUS,C
+0037   0008           00155         return
+                      00156         
+0038   0800           00157         movf INDF,w
+0039   00A2           00158         movwf Min_reg
+003A   0008           00159         return
+                      00160         
+                      00161 
+                      00162 ; Min_max subroutine - end
+                      00163 
+                      00164 ; AVG subroutine - begin
+003B                  00165 AVG
+003B   0008           00166         return
+                      00167 ; AVG subroutine - end
+                      00168 
+                      00169         
+                      00170 ; Load TestVector0 - begin
+003C                  00171 Load_TestVector0
+003C   3001           00172         movlw   d'1'                    ; W <- d'1'
+003D   00C0           00173         movwf   0x40                    ; (0x40) <- W
+003E   3017           00174         movlw   d'23'                   ; W <- d'23'
+003F   00C1           00175         movwf   0x41                    ; (0x41) <- W
+0040   302A           00176         movlw   d'42'                   ; W <- d'42'
+0041   00C2           00177         movwf   0x42                    ; (0x42) <- W
+0042   3000           00178         movlw   d'0'                    ; W <- d'0'
+0043   00C3           00179         movwf   0x43                    ; (0x43) <- W
+0044   304D           00180         movlw   d'77'                   ; W <- d'77'
+0045   00C4           00181         movwf   0x44                    ; (0x44) <- W
+0046   3027           00182         movlw   d'39'                   ; W <- d'39'
+0047   00C5           00183         movwf   0x45                    ; (0x45) <- W
+0048   307E           00184         movlw   d'126'                  ; W <- d'120'
+0049   00C6           00185         movwf   0x46                    ; (0x46) <- W
+004A   307F           00186         movlw   d'127'                  ; W <- d'127'
+004B   00C7           00187         movwf   0x47                    ; (0x47) <- W
+                      00188 
+004C   3040           00189         movlw   0x40                    ; Address_reg is loadad with the address where the first data is
+                             positioned
+004D   00A0           00190         movwf   Address_reg
+004E   3008           00191         movlw   d'8'                    ; Length_reg is loaded with the legnth of data
+004F   00A1           00192         movwf   Length_reg
+                      00193 
+0050   0008           00194         return
+                      00195 ; Load TestVector0 - end
+                      00196 
+                      00197 
+                      00198 ; Load TestVector1 - begin
+0051                  00199 Load_TestVector1
+0051   3001           00200         movlw   d'1'                    ; W <- d'1'
+MPASM  5.40                    STATISTICS.ASM   6-6-2023  20:58:38         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0052   00C0           00201         movwf   0x40                    ; (0x40) <- W
+0053   3017           00202         movlw   d'23'                   ; W <- d'23'
+0054   00C1           00203         movwf   0x41                    ; (0x41) <- W
+0055   302A           00204         movlw   d'42'                   ; W <- d'42'
+0056   00C2           00205         movwf   0x42                    ; (0x42) <- W
+0057   3000           00206         movlw   d'0'                    ; W <- d'0'
+0058   00C3           00207         movwf   0x43                    ; (0x43) <- W
+0059   3046           00208         movlw   d'70'                   ; W <- d'77'
+005A   00C4           00209         movwf   0x44                    ; (0x44) <- W
+005B   3027           00210         movlw   d'39'                   ; W <- d'39'
+005C   00C5           00211         movwf   0x45                    ; (0x45) <- W
+005D   3078           00212         movlw   d'120'                  ; W <- d'120'
+005E   00C6           00213         movwf   0x46                    ; (0x46) <- W
+005F   307F           00214         movlw   d'127'                  ; W <- d'127'
+0060   00C7           00215         movwf   0x47                    ; (0x47) <- W
+0061   300F           00216         movlw   d'15'                   ; W <- d'15'
+0062   00C8           00217         movwf   0x48                    ; (0x48) <- W
+0063   305D           00218         movlw   d'93'                   ; W <- d'93'
+0064   00C9           00219         movwf   0x49                    ; (0x49) <- W
+0065   300E           00220         movlw   d'14'                   ; W <- d'14'
+0066   00CA           00221         movwf   0x4A                    ; (0x4A) <- W
+0067   3046           00222         movlw   d'70'                   ; W <- d'70'
+0068   00CB           00223         movwf   0x4B                    ; (0x4B) <- W
+0069   3055           00224         movlw   d'85'                   ; W <- d'85'
+006A   00CC           00225         movwf   0x4C                    ; (0x4C) <- W
+006B   300F           00226         movlw   d'15'                   ; W <- d'15'
+006C   00CD           00227         movwf   0x4D                    ; (0x4D) <- W
+006D   3020           00228         movlw   d'32'                   ; W <- d'32'
+006E   00CE           00229         movwf   0x4E                    ; (0x4E) <- W
+006F   3078           00230         movlw   d'120'                  ; W <- d'120'
+0070   00CF           00231         movwf   0x4F                    ; (0x4F) <- W
+                      00232 
+0071   3040           00233         movlw   0x40                    ; Address_reg is loadad with the address where the first data is
+                             positioned
+0072   00A0           00234         movwf   Address_reg
+0073   3010           00235         movlw   d'16'                   ; Length_reg is loaded with the legnth of data
+0074   00A1           00236         movwf   Length_reg
+                      00237 
+0075   0008           00238         return
+                      00239 ; Load TestVector1 - end
+                      00240 
+                      00241 
+                      00242 ; Load TestVector2 - begin
+0076                  00243 Load_TestVector2
+0076   3020           00244         movlw   d'32'                   ; W <- d'32'
+0077   00C0           00245         movwf   0x40                    ; (0x40) <- W
+                      00246 
+0078   3040           00247         movlw   0x40                    ; Address_reg is loadad with the address where the first data is
+                             positioned
+0079   00A0           00248         movwf   Address_reg
+007A   3001           00249         movlw   d'1'                    ; Length_reg is loaded with the legnth of data
+007B   00A1           00250         movwf   Length_reg
+                      00251 
+MPASM  5.40                    STATISTICS.ASM   6-6-2023  20:58:38         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+007C   0008           00252         return
+                      00253 ; Load TestVector2 - end
+                      00254 
+3F3A                  00255         END                       ; directive 'end of program'
+MPASM  5.40                    STATISTICS.ASM   6-6-2023  20:58:38         PAGE  7
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ACKDT                             00000005
+ACKEN                             00000004
+ACKSTAT                           00000006
+ADCON0                            0000001F
+ADCON1                            0000009F
+ADCS0                             00000006
+ADCS1                             00000007
+ADCS2                             00000006
+ADDEN                             00000003
+ADFM                              00000007
+ADIE                              00000006
+ADIF                              00000006
+ADON                              00000000
+ADRESH                            0000001E
+ADRESL                            0000009E
+AVG                               0000003B
+Address_reg                       00000020
+Avg_reg                           00000024
+BCLIE                             00000003
+BCLIF                             00000003
+BF                                00000000
+BRGH                              00000002
+C                                 00000000
+C1INV                             00000004
+C1OUT                             00000006
+C2INV                             00000005
+C2OUT                             00000007
+CCP1CON                           00000017
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCP1X                             00000005
+CCP1Y                             00000004
+CCP2CON                           0000001D
+CCP2IE                            00000000
+CCP2IF                            00000000
+CCP2M0                            00000000
+CCP2M1                            00000001
+CCP2M2                            00000002
+CCP2M3                            00000003
+CCP2X                             00000005
+CCP2Y                             00000004
+CCPR1                             00000015
+CCPR1H                            00000016
+CCPR1L                            00000015
+CCPR2                             0000001B
+CCPR2H                            0000001C
+CCPR2L                            0000001B
+CHS0                              00000003
+CHS1                              00000004
+MPASM  5.40                    STATISTICS.ASM   6-6-2023  20:58:38         PAGE  8
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+CHS2                              00000005
+CIS                               00000003
+CKE                               00000006
+CKP                               00000004
+CM0                               00000000
+CM1                               00000001
+CM2                               00000002
+CMCON                             0000009C
+CMIE                              00000006
+CMIF                              00000006
+CREN                              00000004
+CSRC                              00000007
+CVR0                              00000000
+CVR1                              00000001
+CVR2                              00000002
+CVR3                              00000003
+CVRCON                            0000009D
+CVREN                             00000007
+CVROE                             00000006
+CVRR                              00000005
+Current                           00000025
+D                                 00000005
+DATA_ADDRESS                      00000005
+DC                                00000001
+D_A                               00000005
+D_NOT_A                           00000005
+EEADR                             0000010D
+EEADRH                            0000010F
+EECON1                            0000018C
+EECON2                            0000018D
+EEDATA                            0000010C
+EEDATH                            0000010E
+EEIE                              00000004
+EEIF                              00000004
+EEPGD                             00000007
+F                                 00000001
+FERR                              00000002
+FSR                               00000004
+GCEN                              00000007
+GIE                               00000007
+GO                                00000002
+GO_DONE                           00000002
+GO_NOT_DONE                       00000002
+Gpr_0                             00000026
+I2C_DATA                          00000005
+I2C_READ                          00000002
+I2C_START                         00000003
+I2C_STOP                          00000004
+IBF                               00000007
+IBOV                              00000005
+INDF                              00000000
+INTCON                            0000000B
+INTE                              00000004
+MPASM  5.40                    STATISTICS.ASM   6-6-2023  20:58:38         PAGE  9
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+INTEDG                            00000006
+INTF                              00000001
+IRP                               00000007
+Inner_loop                        0000001E
+Length_reg                        00000021
+Load_TestVector0                  0000003C
+Load_TestVector1                  00000051
+Load_TestVector2                  00000076
+Max_reg                           00000023
+Min_max                           0000002B
+Min_max_0                         00000034
+Min_reg                           00000022
+NOT_A                             00000005
+NOT_ADDRESS                       00000005
+NOT_BO                            00000000
+NOT_BOR                           00000000
+NOT_DONE                          00000002
+NOT_PD                            00000003
+NOT_POR                           00000001
+NOT_RBPU                          00000007
+NOT_RC8                           00000006
+NOT_T1SYNC                        00000002
+NOT_TO                            00000004
+NOT_TX8                           00000006
+NOT_W                             00000002
+NOT_WRITE                         00000002
+OBF                               00000006
+OERR                              00000001
+OPTION_REG                        00000081
+P                                 00000004
+PCFG0                             00000000
+PCFG1                             00000001
+PCFG2                             00000002
+PCFG3                             00000003
+PCL                               00000002
+PCLATH                            0000000A
+PCON                              0000008E
+PEIE                              00000006
+PEN                               00000002
+PIE1                              0000008C
+PIE2                              0000008D
+PIR1                              0000000C
+PIR2                              0000000D
+PORTA                             00000005
+PORTB                             00000006
+PORTC                             00000007
+PORTD                             00000008
+PORTE                             00000009
+PR2                               00000092
+PS0                               00000000
+PS1                               00000001
+PS2                               00000002
+PSA                               00000003
+MPASM  5.40                    STATISTICS.ASM   6-6-2023  20:58:38         PAGE 10
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+PSPIE                             00000007
+PSPIF                             00000007
+PSPMODE                           00000004
+R                                 00000002
+RA0                               00000000
+RA1                               00000001
+RA2                               00000002
+RA3                               00000003
+RA4                               00000004
+RA5                               00000005
+RB0                               00000000
+RB1                               00000001
+RB2                               00000002
+RB3                               00000003
+RB4                               00000004
+RB5                               00000005
+RB6                               00000006
+RB7                               00000007
+RBIE                              00000003
+RBIF                              00000000
+RC0                               00000000
+RC1                               00000001
+RC2                               00000002
+RC3                               00000003
+RC4                               00000004
+RC5                               00000005
+RC6                               00000006
+RC7                               00000007
+RC8_9                             00000006
+RC9                               00000006
+RCD8                              00000000
+RCEN                              00000003
+RCIE                              00000005
+RCIF                              00000005
+RCREG                             0000001A
+RCSTA                             00000018
+RD                                00000000
+RD0                               00000000
+RD1                               00000001
+RD2                               00000002
+RD3                               00000003
+RD4                               00000004
+RD5                               00000005
+RD6                               00000006
+RD7                               00000007
+RE0                               00000000
+RE1                               00000001
+RE2                               00000002
+READ_WRITE                        00000002
+RP0                               00000005
+RP1                               00000006
+RSEN                              00000001
+RX9                               00000006
+MPASM  5.40                    STATISTICS.ASM   6-6-2023  20:58:38         PAGE 11
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+RX9D                              00000000
+R_NOT_W                           00000002
+R_W                               00000002
+S                                 00000003
+SEN                               00000000
+SMP                               00000007
+SPBRG                             00000099
+SPEN                              00000007
+SREN                              00000005
+SSPADD                            00000093
+SSPBUF                            00000013
+SSPCON                            00000014
+SSPCON2                           00000091
+SSPEN                             00000005
+SSPIE                             00000003
+SSPIF                             00000003
+SSPM0                             00000000
+SSPM1                             00000001
+SSPM2                             00000002
+SSPM3                             00000003
+SSPOV                             00000006
+SSPSTAT                           00000094
+STATUS                            00000003
+SYNC                              00000004
+Statistics                        00000013
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
+T0SE                              00000004
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000010
+T1INSYNC                          00000002
+T1OSCEN                           00000003
+T1SYNC                            00000002
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000012
+TMR0                              00000001
+TMR0IE                            00000005
+TMR0IF                            00000002
+TMR1CS                            00000001
+TMR1H                             0000000F
+TMR1IE                            00000000
+TMR1IF                            00000000
+TMR1L                             0000000E
+TMR1ON                            00000000
+TMR2                              00000011
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2ON                            00000002
+TOUTPS0                           00000003
+TOUTPS1                           00000004
+MPASM  5.40                    STATISTICS.ASM   6-6-2023  20:58:38         PAGE 12
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TOUTPS2                           00000005
+TOUTPS3                           00000006
+TRISA                             00000085
+TRISA0                            00000000
+TRISA1                            00000001
+TRISA2                            00000002
+TRISA3                            00000003
+TRISA4                            00000004
+TRISA5                            00000005
+TRISB                             00000086
+TRISB0                            00000000
+TRISB1                            00000001
+TRISB2                            00000002
+TRISB3                            00000003
+TRISB4                            00000004
+TRISB5                            00000005
+TRISB6                            00000006
+TRISB7                            00000007
+TRISC                             00000087
+TRISC0                            00000000
+TRISC1                            00000001
+TRISC2                            00000002
+TRISC3                            00000003
+TRISC4                            00000004
+TRISC5                            00000005
+TRISC6                            00000006
+TRISC7                            00000007
+TRISD                             00000088
+TRISD0                            00000000
+TRISD1                            00000001
+TRISD2                            00000002
+TRISD3                            00000003
+TRISD4                            00000004
+TRISD5                            00000005
+TRISD6                            00000006
+TRISD7                            00000007
+TRISE                             00000089
+TRISE0                            00000000
+TRISE1                            00000001
+TRISE2                            00000002
+TRMT                              00000001
+TX8_9                             00000006
+TX9                               00000006
+TX9D                              00000000
+TXD8                              00000000
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXREG                             00000019
+TXSTA                             00000098
+UA                                00000001
+W                                 00000000
+WCOL                              00000007
+MPASM  5.40                    STATISTICS.ASM   6-6-2023  20:58:38         PAGE 13
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+WR                                00000001
+WREN                              00000002
+WRERR                             00000003
+Z                                 00000002
+_BODEN_OFF                        00003FBF
+_BODEN_ON                         00003FFF
+_CONFIG                           00002007
+_CPD_OFF                          00003FFF
+_CPD_ON                           00003EFF
+_CP_ALL                           00001FFF
+_CP_OFF                           00003FFF
+_DEBUG_OFF                        00003FFF
+_DEBUG_ON                         000037FF
+_DEVID1                           00002006
+_HS_OSC                           00003FFE
+_IDLOC0                           00002000
+_IDLOC1                           00002001
+_IDLOC2                           00002002
+_IDLOC3                           00002003
+_LP_OSC                           00003FFC
+_LVP_OFF                          00003F7F
+_LVP_ON                           00003FFF
+_PWRTE_OFF                        00003FFF
+_PWRTE_ON                         00003FF7
+_RC_OSC                           00003FFF
+_WDT_OFF                          00003FFB
+_WDT_ON                           00003FFF
+_WRT_1FOURTH                      00003BFF
+_WRT_256                          00003DFF
+_WRT_HALF                         000039FF
+_WRT_OFF                          00003FFF
+_XT_OSC                           00003FFD
+__16F877A                         00000001
+__DEBUG                           1
+f                                 00000001
+loop                              00000012
+main                              00000010
+pclath_temp                       0000007F
+status_temp                       0000007E
+w                                 00000000
+w_temp                            0000007D
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :     0 reported,     0 suppressed
+
+

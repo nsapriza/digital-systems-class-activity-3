@@ -54,6 +54,10 @@ Length_reg	EQU	0x21
 Min_reg		EQU 0x22
 Max_reg		EQU 0x23
 Avg_reg		EQU 0x24
+Current 	EQU 0x25
+Gpr_0		EQU 0x26
+w			EQU d'0'
+f			EQU d'1'
 ;**********************************************************************
 	ORG     0x000           ; processor reset vector
 
@@ -83,8 +87,8 @@ Avg_reg		EQU 0x24
 
 main
 
-	call	Load_TestVector0
-;	call	Load_TestVector1
+;	call	Load_TestVector0
+	call	Load_TestVector1
 ;	call	Load_TestVector2
 	
 	call	Statistics
@@ -97,14 +101,72 @@ loop
 
 ; Statistics subroutine - begin
 Statistics
-	; Statistics subroutine developed code goes here. 
-	;
-	;
+	movf Address_reg,w
+	movwf Current
+	
+	movf Current,w
+	movwf FSR
+	movf INDF,w
+	movwf Min_reg
+	movwf Max_reg
+	movwf Avg_reg
+	
+	decfsz Length_reg,w
+	goto Inner_loop
 	return
-; Statistics subroutine - begin
 
+Inner_loop	
+	incf Current,f
+	call Min_max
+	
+	movf Current,w
+	movwf FSR
+	movf INDF,w
+	addwf Avg_reg,f
 
+	movf Address_reg,w
+	addwf Length_reg,w
+	subwf Current,w
+	btfss STATUS,C
+	goto Inner_loop
+	call AVG	
+	return
+; Statistics subroutine - end
 
+; Min_max subroutine - begin
+Min_max	
+	movf Current,w
+	movwf FSR
+	movf INDF,w
+	subwf Max_reg,w
+	
+	btfsc STATUS,C
+	goto Min_max_0
+	
+	movf INDF,w
+	movwf Max_reg
+	return
+
+Min_max_0
+	movf INDF,w
+	subwf Min_reg,w
+
+	btfss STATUS,C
+	return
+	
+	movf INDF,w
+	movwf Min_reg
+	return
+	
+
+; Min_max subroutine - end
+
+; AVG subroutine - begin
+AVG
+	return
+; AVG subroutine - end
+
+	
 ; Load TestVector0 - begin
 Load_TestVector0
 	movlw	d'1'			; W <- d'1'
